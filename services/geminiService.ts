@@ -1,10 +1,13 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { RecipeSuggestion } from '../types';
 
-// Fix: Per @google/genai guidelines, the API key must be read from process.env.API_KEY.
-// This also resolves the TypeScript error regarding 'import.meta.env'.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Fix: Use type assertion to access environment variables because Vite's client types are unavailable.
+const apiKey = (import.meta as any).env.VITE_API_KEY;
+if (!apiKey) {
+    throw new Error("VITE_API_KEY is not defined in environment variables.");
+}
+
+const ai = new GoogleGenAI({ apiKey });
 
 const recipeSchema = {
     type: Type.OBJECT,

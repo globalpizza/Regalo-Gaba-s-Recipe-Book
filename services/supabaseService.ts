@@ -1,11 +1,9 @@
-// Fix: Add Vite client types to resolve errors with 'import.meta.env'.
-/// <reference types="vite/client" />
-
 import { createClient } from '@supabase/supabase-js';
 import { Recipe } from '../types';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
+// Fix: Use type assertion to access environment variables because Vite's client types are unavailable.
+const supabaseUrl = (import.meta as any).env.VITE_SUPABASE_URL;
+const supabaseKey = (import.meta as any).env.VITE_SUPABASE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
     throw new Error("VITE_SUPABASE_URL and VITE_SUPABASE_KEY must be provided in environment variables.");

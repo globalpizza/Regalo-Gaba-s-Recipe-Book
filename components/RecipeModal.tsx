@@ -27,7 +27,7 @@ const RecipeModal: React.FC<RecipeModalProps> = ({ isOpen, onClose, onSave, onDe
             setTitle(recipe.title);
             setIngredients(recipe.ingredients);
             setSteps(recipe.steps);
-            setImagePreview(recipe.imageUrl);
+            setImagePreview(recipe.image_url);
             setImageFile(null);
             setIsEditing(false);
         } else {
@@ -63,7 +63,7 @@ const RecipeModal: React.FC<RecipeModalProps> = ({ isOpen, onClose, onSave, onDe
             return;
         }
         setIsSaving(true);
-        await onSave({ id: recipe?.id, title, ingredients, steps, imageUrl: recipe?.imageUrl || '' }, imageFile);
+        await onSave({ id: recipe?.id, title, ingredients, steps, image_url: recipe?.image_url || '' }, imageFile);
         setIsSaving(false);
         onClose();
     };

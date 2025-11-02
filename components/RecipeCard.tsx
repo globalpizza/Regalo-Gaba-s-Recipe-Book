@@ -13,7 +13,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onSelect }) => {
             onClick={onSelect}
         >
             <img 
-                src={recipe.imageUrl || 'https://picsum.photos/400/300'} 
+                src={recipe.image_url || 'https://picsum.photos/400/300'} 
                 alt={recipe.title} 
                 className="w-full h-48 object-cover"
             />

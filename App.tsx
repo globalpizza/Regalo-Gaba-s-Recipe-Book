@@ -46,13 +46,13 @@ const App: React.FC = () => {
 
     const handleSaveRecipe = async (recipeData: Omit<Recipe, 'id' | 'created_at'> & { id?: string }, imageFile: File | null) => {
         try {
-            let finalImageUrl = recipeData.imageUrl;
+            let finalImageUrl = recipeData.image_url;
 
             if (imageFile) {
                 finalImageUrl = await uploadImage(imageFile, recipeData.id);
             }
 
-            const recipeToSave = { ...recipeData, imageUrl: finalImageUrl };
+            const recipeToSave = { ...recipeData, image_url: finalImageUrl };
             
             if (recipeData.id) {
                 const updated = await updateRecipe(recipeData.id, recipeToSave);
@@ -83,7 +83,7 @@ const App: React.FC = () => {
                 title: suggestion.title,
                 ingredients: suggestion.ingredients.join('\n'),
                 steps: suggestion.steps.join('\n'),
-                imageUrl: `https://picsum.photos/seed/${suggestion.title.replace(/\s+/g, '-')}/400/300`,
+                image_url: `https://picsum.photos/seed/${suggestion.title.replace(/\s+/g, '-')}/400/300`,
             };
             const newRecipe = await addRecipe(newRecipeData);
             setRecipes(prev => [newRecipe, ...prev]);
@@ -98,7 +98,7 @@ const App: React.FC = () => {
             <header className="py-8 text-center">
                 <div className="inline-flex items-center gap-4">
                     <HeartIcon className="w-10 h-10 text-brand-pink"/>
-                    <h1 className="text-4xl md:text-5xl font-serif font-bold text-brand-text">Recetario de Gaba</h1>
+                    <h1 className="text-4xl md:text-5xl font-serif font-bold text-brand-text">Gaba's Recipe Book</h1>
                     <HeartIcon className="w-10 h-10 text-brand-pink"/>
                 </div>
                 <p className="mt-2 text-lg text-brand-text/80">Bienvenida a tu lugar especial para creaciones culinarias 💖</p>

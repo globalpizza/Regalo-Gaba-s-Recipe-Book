@@ -76,7 +76,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ onSaveRecipe }) => {
                     <header className="p-4 bg-white/50 flex justify-between items-center rounded-t-2xl border-b border-brand-orange">
                         <div className="flex items-center gap-2">
                              <SparklesIcon className="w-6 h-6 text-brand-pink-dark"/>
-                             <h3 className="font-bold text-lg text-brand-text">Asistente AI de Gaba</h3>
+                             <h3 className="font-bold text-lg text-brand-text">Gaba's AI Assistant</h3>
                         </div>
                         <button onClick={() => setIsOpen(false)} className="text-brand-text hover:text-brand-pink-dark">
                             <CloseIcon className="w-6 h-6"/>
