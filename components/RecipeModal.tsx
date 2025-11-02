@@ -5,7 +5,7 @@ import { CloseIcon, UploadIcon } from './Icons';
 interface RecipeModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (recipe: Omit<Recipe, 'id' | 'created_at'> & { id?: string }, imageFile: File | null) => Promise<void>;
+    onSave: (recipe: Omit<Recipe, 'id' | 'created_at' | 'image_url'> & { id?: string; image_url: string | null }, imageFile: File | null) => Promise<void>;
     onDelete: (id: string) => Promise<void>;
     recipe: Recipe | null;
 }
@@ -63,7 +63,7 @@ const RecipeModal: React.FC<RecipeModalProps> = ({ isOpen, onClose, onSave, onDe
             return;
         }
         setIsSaving(true);
-        await onSave({ id: recipe?.id, title, ingredients, steps, image_url: recipe?.image_url || '' }, imageFile);
+        await onSave({ id: recipe?.id, title, ingredients, steps, image_url: imagePreview }, imageFile);
         setIsSaving(false);
         onClose();
     };

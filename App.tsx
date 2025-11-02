@@ -44,7 +44,10 @@ const App: React.FC = () => {
         setSelectedRecipe(null);
     };
 
-    const handleSaveRecipe = async (recipeData: Omit<Recipe, 'id' | 'created_at'> & { id?: string }, imageFile: File | null) => {
+    const handleSaveRecipe = async (
+        recipeData: Omit<Recipe, 'id' | 'created_at' | 'image_url'> & { id?: string; image_url: string | null },
+        imageFile: File | null
+    ) => {
         try {
             let finalImageUrl = recipeData.image_url;
 
@@ -52,13 +55,18 @@ const App: React.FC = () => {
                 finalImageUrl = await uploadImage(imageFile, recipeData.id);
             }
 
-            const recipeToSave = { ...recipeData, image_url: finalImageUrl };
-            
+            const payload = {
+                title: recipeData.title,
+                ingredients: recipeData.ingredients,
+                steps: recipeData.steps,
+                image_url: finalImageUrl,
+            };
+
             if (recipeData.id) {
-                const updated = await updateRecipe(recipeData.id, recipeToSave);
+                const updated = await updateRecipe(recipeData.id, payload);
                 setRecipes(recipes.map(r => r.id === updated.id ? updated : r));
             } else {
-                const newRecipe = await addRecipe(recipeToSave);
+                const newRecipe = await addRecipe(payload);
                 setRecipes([newRecipe, ...recipes]);
             }
         } catch (error) {

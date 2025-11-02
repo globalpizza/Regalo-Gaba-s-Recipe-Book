@@ -1,10 +1,9 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { RecipeSuggestion } from '../types';
 
-// Fix: Use type assertion to access environment variables because Vite's client types are unavailable.
-const apiKey = (import.meta as any).env.VITE_API_KEY;
+const apiKey = process.env.API_KEY;
 if (!apiKey) {
-    throw new Error("VITE_API_KEY is not defined in environment variables.");
+    throw new Error("API_KEY is not defined in environment variables.");
 }
 
 const ai = new GoogleGenAI({ apiKey });
