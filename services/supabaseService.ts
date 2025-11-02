@@ -1,3 +1,6 @@
+// Fix: Add Vite client types to resolve errors with 'import.meta.env'.
+/// <reference types="vite/client" />
+
 import { createClient } from '@supabase/supabase-js';
 import { Recipe } from '../types';
 
