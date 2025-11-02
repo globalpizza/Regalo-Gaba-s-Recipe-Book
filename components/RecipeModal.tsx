@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Recipe } from '../types';
-import { CloseIcon } from './Icons';
+import { CloseIcon, UploadIcon } from './Icons';
 
 interface RecipeModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (recipe: Omit<Recipe, 'id'> & { id?: string }) => void;
-    onDelete: (id: string) => void;
+    onSave: (recipe: Omit<Recipe, 'id' | 'created_at'> & { id?: string }, imageFile: File | null) => Promise<void>;
+    onDelete: (id: string) => Promise<void>;
     recipe: Recipe | null;
 }
 
@@ -15,39 +15,64 @@ const RecipeModal: React.FC<RecipeModalProps> = ({ isOpen, onClose, onSave, onDe
     const [title, setTitle] = useState('');
     const [ingredients, setIngredients] = useState('');
     const [steps, setSteps] = useState('');
-    const [imageUrl, setImageUrl] = useState('');
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    
+    const [isSaving, setIsSaving] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
     useEffect(() => {
         if (recipe) {
             setTitle(recipe.title);
             setIngredients(recipe.ingredients);
             setSteps(recipe.steps);
-            setImageUrl(recipe.imageUrl);
-            setIsEditing(false); // Default to view mode
+            setImagePreview(recipe.imageUrl);
+            setImageFile(null);
+            setIsEditing(false);
         } else {
-            // New recipe mode
             setTitle('');
             setIngredients('');
             setSteps('');
-            setImageUrl('');
+            setImagePreview(null);
+            setImageFile(null);
             setIsEditing(true);
         }
-    }, [recipe]);
+        setIsConfirmingDelete(false);
+        setIsSaving(false);
+        setIsDeleting(false);
+    }, [recipe, isOpen]);
 
     if (!isOpen) return null;
 
-    const handleSave = () => {
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleSave = async () => {
         if (!title.trim()) {
             alert("¡Por favor, añade un título!");
             return;
         }
-        onSave({ id: recipe?.id, title, ingredients, steps, imageUrl });
+        setIsSaving(true);
+        await onSave({ id: recipe?.id, title, ingredients, steps, imageUrl: recipe?.imageUrl || '' }, imageFile);
+        setIsSaving(false);
         onClose();
     };
     
-    const handleDelete = () => {
-        if (recipe && window.confirm(`¿Estás segura de que quieres eliminar "${recipe.title}"?`)) {
-            onDelete(recipe.id);
+    const handleDelete = async () => {
+        if (recipe) {
+            setIsDeleting(true);
+            await onDelete(recipe.id);
+            setIsDeleting(false);
             onClose();
         }
     }
@@ -73,10 +98,14 @@ const RecipeModal: React.FC<RecipeModalProps> = ({ isOpen, onClose, onSave, onDe
                 </div>
 
                 <div className="p-6 overflow-y-auto flex-grow">
-                    <div className="mb-6">
-                         <img src={imageUrl || 'https://picsum.photos/800/400'} alt={title} className="w-full h-64 object-cover rounded-lg shadow-md" />
+                     <div className="mb-6 relative">
+                         <img src={imagePreview || 'https://via.placeholder.com/800x400.png?text=Añade+una+imagen'} alt={title} className="w-full h-64 object-cover rounded-lg shadow-md bg-brand-orange" />
                          {isEditing && (
-                             <input type="text" placeholder="URL de la Imagen" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="mt-2 w-full p-2 border border-brand-orange rounded-md bg-white focus:ring-2 focus:ring-brand-pink focus:outline-none"/>
+                            <label htmlFor="image-upload" className="absolute bottom-2 right-2 flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm text-brand-text font-semibold rounded-full shadow-md hover:bg-white cursor-pointer transition-all">
+                                <UploadIcon className="w-5 h-5" />
+                                <span>{imageFile ? "Cambiar foto" : "Subir foto"}</span>
+                                <input id="image-upload" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                            </label>
                          )}
                     </div>
 
@@ -91,7 +120,7 @@ const RecipeModal: React.FC<RecipeModalProps> = ({ isOpen, onClose, onSave, onDe
                                     className="w-full h-64 p-3 border border-brand-orange rounded-md bg-white focus:ring-2 focus:ring-brand-pink focus:outline-none"
                                 />
                             ) : (
-                                <p className="whitespace-pre-wrap text-brand-text prose">{ingredients}</p>
+                                <p className="whitespace-pre-wrap text-brand-text prose">{ingredients || "No hay ingredientes."}</p>
                             )}
                         </div>
                         <div>
@@ -104,26 +133,42 @@ const RecipeModal: React.FC<RecipeModalProps> = ({ isOpen, onClose, onSave, onDe
                                     className="w-full h-64 p-3 border border-brand-orange rounded-md bg-white focus:ring-2 focus:ring-brand-pink focus:outline-none"
                                 />
                             ) : (
-                                <p className="whitespace-pre-wrap text-brand-text prose">{steps}</p>
+                                <p className="whitespace-pre-wrap text-brand-text prose">{steps || "No hay pasos."}</p>
                             )}
                         </div>
                     </div>
                 </div>
                 
                 <div className="p-4 bg-white/50 border-t border-brand-orange flex justify-end items-center gap-4">
-                    {isEditing ? (
-                        <button onClick={handleSave} className="px-6 py-2 bg-brand-pink-dark text-white font-bold rounded-full hover:bg-opacity-80 transition-all shadow-md">
-                            Guardar Receta
-                        </button>
+                    {isConfirmingDelete ? (
+                        <div className="w-full flex justify-between items-center">
+                             <p className="text-red-600 font-bold">¿Seguro que quieres eliminar esta receta?</p>
+                             <div className="flex gap-2">
+                                <button onClick={() => setIsConfirmingDelete(false)} className="px-4 py-2 text-gray-700 hover:bg-gray-200 font-semibold rounded-full transition-colors">
+                                   Cancelar
+                                </button>
+                                <button onClick={handleDelete} disabled={isDeleting} className="px-6 py-2 bg-red-600 text-white font-bold rounded-full hover:bg-red-700 transition-all shadow-md disabled:bg-red-300">
+                                   {isDeleting ? 'Eliminando...' : 'Sí, eliminar'}
+                                </button>
+                             </div>
+                        </div>
                     ) : (
-                        <button onClick={() => setIsEditing(true)} className="px-6 py-2 bg-brand-pink text-white font-bold rounded-full hover:bg-brand-pink-dark transition-all shadow-md">
-                            Editar
-                        </button>
-                    )}
-                    {recipe && (
-                        <button onClick={handleDelete} className="px-4 py-2 text-red-500 hover:text-white hover:bg-red-500 font-semibold rounded-full transition-colors">
-                           Eliminar
-                        </button>
+                        <>
+                            {isEditing ? (
+                                <button onClick={handleSave} disabled={isSaving} className="px-6 py-2 bg-brand-pink-dark text-white font-bold rounded-full hover:bg-opacity-80 transition-all shadow-md disabled:bg-opacity-50">
+                                    {isSaving ? 'Guardando...' : 'Guardar Receta'}
+                                </button>
+                            ) : (
+                                <button onClick={() => setIsEditing(true)} className="px-6 py-2 bg-brand-pink text-white font-bold rounded-full hover:bg-brand-pink-dark transition-all shadow-md">
+                                    Editar
+                                </button>
+                            )}
+                            {recipe && !isEditing && (
+                                <button onClick={() => setIsConfirmingDelete(true)} className="px-4 py-2 text-red-500 hover:text-white hover:bg-red-500 font-semibold rounded-full transition-colors">
+                                   Eliminar
+                                </button>
+                            )}
+                        </>
                     )}
                 </div>
             </div>

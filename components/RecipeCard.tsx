@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Recipe } from '../types';
 
@@ -10,7 +9,7 @@ interface RecipeCardProps {
 const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onSelect }) => {
     return (
         <div 
-            className="bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transform hover:scale-105 transition-transform duration-300 group"
+            className="bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-xl transition-all duration-300 ease-in-out group"
             onClick={onSelect}
         >
             <img 
