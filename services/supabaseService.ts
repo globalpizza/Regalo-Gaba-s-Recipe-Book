@@ -1,8 +1,12 @@
+
 import { createClient } from '@supabase/supabase-js';
 import { Recipe } from '../types';
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
+// Universal environment variable access for Vercel (import.meta.env) and local/preview (process.env)
+// Fix: Correctly cast import.meta to any to avoid TypeScript error with import.meta.env
+const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseKey = (import.meta as any).env?.VITE_SUPABASE_KEY || process.env.SUPABASE_KEY;
+
 
 if (!supabaseUrl || !supabaseKey) {
     throw new Error("SUPABASE_URL and SUPABASE_KEY must be provided in environment variables.");

@@ -1,12 +1,14 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { RecipeSuggestion } from '../types';
 
-const apiKey = process.env.API_KEY;
-if (!apiKey) {
+// Fix: Per coding guidelines, API key must be from process.env.API_KEY.
+// This also resolves the TypeScript error.
+if (!process.env.API_KEY) {
     throw new Error("API_KEY is not defined in environment variables.");
 }
 
-const ai = new GoogleGenAI({ apiKey });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const recipeSchema = {
     type: Type.OBJECT,
@@ -35,13 +37,14 @@ const recipeSchema = {
 
 export const suggestRecipe = async (prompt: string): Promise<RecipeSuggestion> => {
     try {
-        const fullPrompt = `Eres un chef creativo dentro de un recetario digital hecho con amor. Tu nombre es Asistente de Gaba. Tu objetivo es proporcionar una receta maravillosa basada en la solicitud del usuario. Sé cálido y alentador en tus respuestas.
-        Solicitud del usuario: "${prompt}"`;
+        // Fix: Use systemInstruction for persona as per Gemini API guidelines.
+        const systemInstruction = `Eres un chef creativo dentro de un recetario digital hecho con amor. Tu nombre es Asistente de Gaba. Tu objetivo es proporcionar una receta maravillosa basada en la solicitud del usuario. Sé cálido y alentador en tus respuestas.`;
 
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
-            contents: fullPrompt,
+            contents: prompt,
             config: {
+                systemInstruction,
                 responseMimeType: "application/json",
                 responseSchema: recipeSchema,
             },
