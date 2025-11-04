@@ -30,23 +30,47 @@ export const getRecipes = async (): Promise<Recipe[]> => {
     return data || [];
 };
 
-export const uploadImage = async (file: File, recipeId?: string): Promise<string> => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${recipeId || Date.now()}.${fileExt}`;
-    const filePath = `${fileName}`;
+export const deleteImage = async (imageUrl: string): Promise<void> => {
+    if (!imageUrl || !imageUrl.includes(BUCKET_NAME)) {
+        return;
+    }
+    
+    try {
+        const filePath = imageUrl.split(`${BUCKET_NAME}/`)[1].split('?')[0];
+        if (!filePath) {
+            console.warn("Could not extract file path from image URL for deletion:", imageUrl);
+            return;
+        }
 
+        const { error } = await supabase.storage.from(BUCKET_NAME).remove([filePath]);
+
+        if (error) {
+            // It's often safe to just log this error and not throw,
+            // as it might fail if the file doesn't exist, which is fine.
+            console.error("Could not delete image, it might not exist:", error.message);
+        }
+    } catch (e) {
+        console.error("Error parsing image URL for deletion:", e);
+    }
+};
+
+export const uploadImage = async (file: File): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    // Generate a unique file name using a UUID to prevent overwriting issues
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
+
+    // No upsert needed as the file name is always unique
     const { error: uploadError } = await supabase.storage
         .from(BUCKET_NAME)
-        .upload(filePath, file, { upsert: true });
+        .upload(fileName, file);
 
     if (uploadError) {
         console.error('Error uploading image:', uploadError);
         throw uploadError;
     }
 
-    const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(filePath);
-    // Add a timestamp to the URL to prevent caching issues when re-uploading the same file name.
-    return `${data.publicUrl}?t=${new Date().getTime()}`;
+    const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
+    return data.publicUrl;
 };
 
 type RecipeData = Omit<Recipe, 'id' | 'created_at'>;
