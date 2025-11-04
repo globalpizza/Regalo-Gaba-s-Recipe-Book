@@ -94,19 +94,23 @@ const App: React.FC = () => {
     }
 
     const handleSaveFromChatbot = useCallback(async (suggestion: RecipeSuggestion) => {
-        let imageUrl = `https://via.placeholder.com/400x300.png?text=${encodeURIComponent(suggestion.title)}`;
+        let imageUrl = '';
         
         try {
-            alert("¡Genial! Creando una imagen para tu receta. Esto puede tardar unos segundos...");
+            alert("¡Genial! Intentando crear una imagen para tu receta. Esto puede tardar unos segundos...");
 
             const imageBase64 = await generateRecipeImage(suggestion.title);
             const imageName = `${suggestion.title.replace(/\s+/g, '-')}-${Date.now()}.png`;
             const imageFile = await base64ToFile(imageBase64, imageName);
             imageUrl = await uploadImage(imageFile);
+            alert("¡Imagen generada y subida con éxito!");
             
         } catch (imageError) {
-            console.error("Failed to generate image, using placeholder:", imageError);
-            alert(`No se pudo generar una imagen para "${suggestion.title}". Se usará una imagen por defecto. Error: ${(imageError as Error).message}`);
+            console.error("Failed to generate image with AI, falling back to image search:", imageError);
+            alert(`No se pudo generar una imagen (posiblemente por el límite de la cuota). ¡No te preocupes! Buscando una imagen en internet...`);
+            // Fallback to Unsplash image search
+            const searchQuery = encodeURIComponent(`${suggestion.title} food dish`);
+            imageUrl = `https://source.unsplash.com/400x300/?${searchQuery}`;
         }
 
         try {
@@ -118,7 +122,7 @@ const App: React.FC = () => {
             };
             const newRecipe = await addRecipe(newRecipeData);
             setRecipes(prev => [newRecipe, ...prev]);
-            alert("¡Receta guardada con su nueva imagen!");
+            alert("¡Receta guardada en tu recetario!");
         } catch (saveError) {
             console.error("Failed to save recipe from chatbot:", saveError);
             alert(`Error al guardar la receta del chatbot: ${(saveError as Error).message}`);
