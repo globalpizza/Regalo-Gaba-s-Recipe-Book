@@ -45,7 +45,8 @@ export const uploadImage = async (file: File, recipeId?: string): Promise<string
     }
 
     const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(filePath);
-    return data.publicUrl;
+    // Add a timestamp to the URL to prevent caching issues when re-uploading the same file name.
+    return `${data.publicUrl}?t=${new Date().getTime()}`;
 };
 
 type RecipeData = Omit<Recipe, 'id' | 'created_at'>;

@@ -5,6 +5,14 @@ import RecipeModal from './components/RecipeModal';
 import Chatbot from './components/Chatbot';
 import { PlusIcon, HeartIcon } from './components/Icons';
 import { getRecipes, addRecipe, updateRecipe, deleteRecipe, uploadImage } from './services/supabaseService';
+import { generateRecipeImage } from './services/geminiService';
+
+// Helper function to convert base64 to a File object
+const base64ToFile = async (base64String: string, fileName: string): Promise<File> => {
+    const res = await fetch(`data:image/png;base64,${base64String}`);
+    const blob = await res.blob();
+    return new File([blob], fileName, { type: 'image/png' });
+};
 
 const App: React.FC = () => {
     const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -87,14 +95,27 @@ const App: React.FC = () => {
 
     const handleSaveFromChatbot = useCallback(async (suggestion: RecipeSuggestion) => {
         try {
+            alert("¡Genial! Creando una imagen para tu receta. Esto puede tardar unos segundos...");
+
+            let imageUrl = `https://picsum.photos/seed/${suggestion.title.replace(/\s+/g, '-')}/400/300`;
+
+            const imageBase64 = await generateRecipeImage(suggestion.title);
+
+            if (imageBase64) {
+                const imageName = `${suggestion.title.replace(/\s+/g, '-')}-${Date.now()}.png`;
+                const imageFile = await base64ToFile(imageBase64, imageName);
+                imageUrl = await uploadImage(imageFile);
+            }
+            
             const newRecipeData = {
                 title: suggestion.title,
                 ingredients: suggestion.ingredients.join('\n'),
                 steps: suggestion.steps.join('\n'),
-                image_url: `https://picsum.photos/seed/${suggestion.title.replace(/\s+/g, '-')}/400/300`,
+                image_url: imageUrl,
             };
             const newRecipe = await addRecipe(newRecipeData);
             setRecipes(prev => [newRecipe, ...prev]);
+            alert("¡Receta guardada con su nueva imagen!");
         } catch (error) {
             console.error("Failed to save recipe from chatbot:", error);
             alert("Error al guardar la receta del chatbot.");
