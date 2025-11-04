@@ -20,6 +20,8 @@ const App: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isSavingChatRecipe, setIsSavingChatRecipe] = useState(false);
+
 
     useEffect(() => {
         const fetchRecipes = async () => {
@@ -94,10 +96,11 @@ const App: React.FC = () => {
     }
 
     const handleSaveFromChatbot = useCallback(async (suggestion: RecipeSuggestion) => {
+        setIsSavingChatRecipe(true);
         let imageUrl = '';
         
         try {
-            alert("¡Genial! Intentando crear una imagen para tu receta. Esto puede tardar unos segundos...");
+            alert("¡Genial! Creando una imagen para tu receta. Esto puede tardar unos segundos...");
 
             const imageBase64 = await generateRecipeImage(suggestion.title);
             const imageName = `${suggestion.title.replace(/\s+/g, '-')}-${Date.now()}.png`;
@@ -107,10 +110,21 @@ const App: React.FC = () => {
             
         } catch (imageError) {
             console.error("Failed to generate image with AI, falling back to image search:", imageError);
-            alert(`No se pudo generar una imagen (posiblemente por el límite de la cuota). ¡No te preocupes! Buscando una imagen en internet...`);
-            // Fallback to Unsplash image search
-            const searchQuery = encodeURIComponent(`${suggestion.title} food dish`);
-            imageUrl = `https://source.unsplash.com/400x300/?${searchQuery}`;
+            alert(`No se pudo generar una imagen (límite de cuota alcanzado). ¡No te preocupes! Buscando una alternativa en internet...`);
+            try {
+                // Fallback to Unsplash image search and get the final URL
+                const searchQuery = encodeURIComponent(`${suggestion.title} food dish`);
+                const response = await fetch(`https://source.unsplash.com/400x300/?${searchQuery}`);
+                if (response.url) {
+                    imageUrl = response.url;
+                } else {
+                    // Final fallback if unsplash fails
+                    imageUrl = 'https://picsum.photos/400/300';
+                }
+            } catch (fallbackError) {
+                console.error("Unsplash fallback failed:", fallbackError);
+                imageUrl = 'https://picsum.photos/400/300';
+            }
         }
 
         try {
@@ -126,6 +140,8 @@ const App: React.FC = () => {
         } catch (saveError) {
             console.error("Failed to save recipe from chatbot:", saveError);
             alert(`Error al guardar la receta del chatbot: ${(saveError as Error).message}`);
+        } finally {
+            setIsSavingChatRecipe(false);
         }
     }, []);
 
@@ -141,6 +157,11 @@ const App: React.FC = () => {
             </header>
 
             <main className="container mx-auto px-4 pb-24">
+                 {isSavingChatRecipe && (
+                    <div className="fixed top-4 right-4 bg-blue-500 text-white p-3 rounded-lg shadow-lg z-50 animate-pulse">
+                        Guardando nueva receta del asistente...
+                    </div>
+                 )}
                  {isLoading ? (
                     <div className="text-center py-10">
                         <p className="text-lg animate-pulse">Cargando tus recetas...</p>
