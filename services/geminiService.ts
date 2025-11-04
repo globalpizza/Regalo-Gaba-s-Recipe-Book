@@ -1,17 +1,17 @@
-
+/// <reference types="vite/client" />
 
 import { GoogleGenAI, Type } from "@google/genai";
 import { RecipeSuggestion } from '../types';
 
-// The API_KEY is injected by Vite during build time.
-// See vite.config.ts for the configuration.
-if (!process.env.API_KEY) {
-    throw new Error("API_KEY is not defined. Please set the API_KEY environment variable in your Vercel project settings.");
+// Use Vite's standard way of accessing environment variables.
+// This requires the variable to be named VITE_GEMINI_API_KEY in Vercel.
+const geminiApiKey = import.meta.env?.VITE_GEMINI_API_KEY;
+
+if (!geminiApiKey) {
+    throw new Error("VITE_GEMINI_API_KEY is not defined. Please set the VITE_GEMINI_API_KEY environment variable in your Vercel project settings.");
 }
 
-// Fix: Per @google/genai guidelines, the API key must be obtained from process.env.API_KEY.
-// The client should be initialized directly with this key.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: geminiApiKey });
 
 const recipeSchema = {
     type: Type.OBJECT,

@@ -4,8 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 import { Recipe } from '../types';
 
 // Accede a las variables de entorno usando `import.meta.env` de Vite.
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
+const supabaseUrl = import.meta.env?.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env?.VITE_SUPABASE_KEY;
 
 
 if (!supabaseUrl || !supabaseKey) {
