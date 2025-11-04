@@ -79,7 +79,7 @@ const App: React.FC = () => {
             }
         } catch (error) {
             console.error("Failed to save recipe:", error);
-            alert("Error al guardar la receta.");
+            alert(`Error al guardar la receta: ${(error as Error).message}`);
         }
     };
     
@@ -94,19 +94,22 @@ const App: React.FC = () => {
     }
 
     const handleSaveFromChatbot = useCallback(async (suggestion: RecipeSuggestion) => {
+        let imageUrl = `https://via.placeholder.com/400x300.png?text=${encodeURIComponent(suggestion.title)}`;
+        
         try {
             alert("¡Genial! Creando una imagen para tu receta. Esto puede tardar unos segundos...");
 
-            let imageUrl = `https://picsum.photos/seed/${suggestion.title.replace(/\s+/g, '-')}/400/300`;
-
             const imageBase64 = await generateRecipeImage(suggestion.title);
-
-            if (imageBase64) {
-                const imageName = `${suggestion.title.replace(/\s+/g, '-')}-${Date.now()}.png`;
-                const imageFile = await base64ToFile(imageBase64, imageName);
-                imageUrl = await uploadImage(imageFile);
-            }
+            const imageName = `${suggestion.title.replace(/\s+/g, '-')}-${Date.now()}.png`;
+            const imageFile = await base64ToFile(imageBase64, imageName);
+            imageUrl = await uploadImage(imageFile);
             
+        } catch (imageError) {
+            console.error("Failed to generate image, using placeholder:", imageError);
+            alert(`No se pudo generar una imagen para "${suggestion.title}". Se usará una imagen por defecto. Error: ${(imageError as Error).message}`);
+        }
+
+        try {
             const newRecipeData = {
                 title: suggestion.title,
                 ingredients: suggestion.ingredients.join('\n'),
@@ -116,9 +119,9 @@ const App: React.FC = () => {
             const newRecipe = await addRecipe(newRecipeData);
             setRecipes(prev => [newRecipe, ...prev]);
             alert("¡Receta guardada con su nueva imagen!");
-        } catch (error) {
-            console.error("Failed to save recipe from chatbot:", error);
-            alert("Error al guardar la receta del chatbot.");
+        } catch (saveError) {
+            console.error("Failed to save recipe from chatbot:", saveError);
+            alert(`Error al guardar la receta del chatbot: ${(saveError as Error).message}`);
         }
     }, []);
 
