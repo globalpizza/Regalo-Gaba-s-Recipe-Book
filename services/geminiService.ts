@@ -1,13 +1,16 @@
 
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { RecipeSuggestion } from '../types';
 
-// Fix: Per coding guidelines, API key must be from process.env.API_KEY.
-// This also resolves the TypeScript error.
+// The API_KEY is injected by Vite during build time.
+// See vite.config.ts for the configuration.
 if (!process.env.API_KEY) {
-    throw new Error("API_KEY is not defined in environment variables.");
+    throw new Error("API_KEY is not defined. Please set the API_KEY environment variable in your Vercel project settings.");
 }
 
+// Fix: Per @google/genai guidelines, the API key must be obtained from process.env.API_KEY.
+// The client should be initialized directly with this key.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const recipeSchema = {
@@ -37,7 +40,6 @@ const recipeSchema = {
 
 export const suggestRecipe = async (prompt: string): Promise<RecipeSuggestion> => {
     try {
-        // Fix: Use systemInstruction for persona as per Gemini API guidelines.
         const systemInstruction = `Eres un chef creativo dentro de un recetario digital hecho con amor. Tu nombre es Asistente de Gaba. Tu objetivo es proporcionar una receta maravillosa basada en la solicitud del usuario. Sé cálido y alentador en tus respuestas.`;
 
         const response = await ai.models.generateContent({
@@ -53,7 +55,6 @@ export const suggestRecipe = async (prompt: string): Promise<RecipeSuggestion> =
         const jsonText = response.text.trim();
         const parsedJson = JSON.parse(jsonText);
         
-        // Basic validation
         if (!parsedJson.title || !Array.isArray(parsedJson.ingredients) || !Array.isArray(parsedJson.steps)) {
             throw new Error("Invalid recipe format received from API.");
         }

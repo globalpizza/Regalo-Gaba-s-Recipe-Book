@@ -1,15 +1,15 @@
+/// <reference types="vite/client" />
 
 import { createClient } from '@supabase/supabase-js';
 import { Recipe } from '../types';
 
-// Universal environment variable access for Vercel (import.meta.env) and local/preview (process.env)
-// Fix: Correctly cast import.meta to any to avoid TypeScript error with import.meta.env
-const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseKey = (import.meta as any).env?.VITE_SUPABASE_KEY || process.env.SUPABASE_KEY;
+// Accede a las variables de entorno usando `import.meta.env` de Vite.
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
 
 
 if (!supabaseUrl || !supabaseKey) {
-    throw new Error("SUPABASE_URL and SUPABASE_KEY must be provided in environment variables.");
+    throw new Error("VITE_SUPABASE_URL and VITE_SUPABASE_KEY must be provided in environment variables.");
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
