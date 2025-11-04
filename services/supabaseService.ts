@@ -1,11 +1,12 @@
-/// <reference types="vite/client" />
+// Declara el objeto global que será inyectado por vite.config.ts
+declare const importMetaEnv: Record<string, string>;
 
 import { createClient } from '@supabase/supabase-js';
 import { Recipe } from '../types';
 
-// Accede a las variables de entorno usando `import.meta.env` de Vite.
-const supabaseUrl = import.meta.env?.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env?.VITE_SUPABASE_KEY;
+// Lee las variables desde el objeto global personalizado.
+const supabaseUrl = importMetaEnv.VITE_SUPABASE_URL;
+const supabaseKey = importMetaEnv.VITE_SUPABASE_KEY;
 
 
 if (!supabaseUrl || !supabaseKey) {

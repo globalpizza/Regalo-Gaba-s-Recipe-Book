@@ -1,11 +1,11 @@
-/// <reference types="vite/client" />
+// Declara el objeto global que será inyectado por vite.config.ts
+declare const importMetaEnv: Record<string, string>;
 
 import { GoogleGenAI, Type } from "@google/genai";
 import { RecipeSuggestion } from '../types';
 
-// Use Vite's standard way of accessing environment variables.
-// This requires the variable to be named VITE_GEMINI_API_KEY in Vercel.
-const geminiApiKey = import.meta.env?.VITE_GEMINI_API_KEY;
+// Lee la variable desde el objeto global personalizado.
+const geminiApiKey = importMetaEnv.VITE_GEMINI_API_KEY;
 
 if (!geminiApiKey) {
     throw new Error("VITE_GEMINI_API_KEY is not defined. Please set the VITE_GEMINI_API_KEY environment variable in your Vercel project settings.");
